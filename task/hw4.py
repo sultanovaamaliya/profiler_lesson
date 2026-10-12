@@ -2,6 +2,7 @@
 import abc
 import re
 import sys
+import time
 from collections import defaultdict, Counter, OrderedDict
 from datetime import datetime
 from operator import itemgetter
@@ -39,7 +40,7 @@ def parse_ints(parsed_dict):
 
     return parsed_dict
 
-
+@profile
 def parse_datetime(parsed_dict):
     parsed_dict['DATETIME'] = datetime.strptime(
         parsed_dict['TIMESTAMP'], '%d/%b/%Y:%H:%M:%S %z')
@@ -51,6 +52,7 @@ REQUEST_RE = re.compile(r'''
 ''', re.VERBOSE)
 
 
+@profile
 def parse_request(parsed_dict):
     parsed_dict.update(REQUEST_RE.match(parsed_dict['REQUEST']).groupdict())
     return parsed_dict
@@ -59,6 +61,7 @@ def parse_request(parsed_dict):
 PARSERS = (parse_to_dict, parse_ints, parse_datetime, parse_request)
 
 
+@profile
 def parse_file(lines, parsers=PARSERS):
     for line in lines:
         try:
@@ -230,11 +233,12 @@ def harvest_stats(feed, statistics=ALL_STATS):
         for sb in stats_builders
     }
 
-
+@profile
 def main():
+    tim = time.time()
     with sys.stdin as f:
         stats = harvest_stats(parse_file(f))
-        print(prepare_output(stats))
+        print(prepare_output(stats), time.time() - tim)
 
 
 if __name__ == '__main__':
